@@ -12,10 +12,12 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/BurntSushi/toml"
 )
 
+var modPack = "./modpack"
 var modDir = "./mods"
 
 type Packwiz struct {
@@ -30,13 +32,15 @@ type Packwiz struct {
 }
 
 func init() {
-	flag.StringVar(&modDir, "dir", "./mods", "directory to scan for mods")
+	flag.StringVar(&modPack, "pack", "./modpack", "directory of packwiz modpack")
+	flag.StringVar(&modDir, "dir", "./mods", "directory of mods")
 	flag.Parse()
 }
-func LoadPackwiz(dir string) ([]Packwiz, error) {
+func LoadPackwiz(modpackDir string) ([]Packwiz, error) {
+	modsDir := path.Join(modpackDir, "mods")
 	packwizSuffix := ".pw.toml"
 	var err error
-	files, err := os.ReadDir(dir)
+	files, err := os.ReadDir(modsDir)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +48,7 @@ func LoadPackwiz(dir string) ([]Packwiz, error) {
 	for _, file := range files {
 		if strings.HasSuffix(file.Name(), packwizSuffix) {
 			p := Packwiz{}
-			f, err := os.ReadFile(path.Join(dir, file.Name()))
+			f, err := os.ReadFile(path.Join(modsDir, file.Name()))
 			if err != nil {
 				return nil, err
 			}
@@ -105,10 +109,11 @@ func Download(packwiz Packwiz, distDir string) error {
 	if err != nil {
 		return err
 	}
+	time.Sleep(500 * time.Millisecond)
 	return nil
 }
 func main() {
-	ps, err := LoadPackwiz(modDir)
+	ps, err := LoadPackwiz(modPack)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
